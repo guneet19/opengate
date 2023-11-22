@@ -293,6 +293,34 @@ def create_g4_optical_properties_table(material_properties_dictionary):
 
     return g4_material_table
 
+def get_g4_physical_volumes(volume_surfaces_info):
+
+    physical_volumes = {}
+
+    for key, surfaces in volume_surfaces_info.items():
+        for surface in surfaces:
+            volume_a = surface['volumes'][0]
+            volume_b = surface['volumes'][1]
+
+            physical_volume_a = g4.G4PhysicalVolumeStore.GetInstance().GetVolume(g4.G4String(volume_a))
+            physical_volume_b = g4.G4PhysicalVolumeStore.GetInstance().GetVolume(g4.G4String(volume_b))
+
+            physical_volumes_info = {
+                "volumes" : [volume_a, volume_b],
+                "physical_volumes": [physical_volume_a, physical_volume_b]
+            }
+
+            if volume_a in physical_volumes:
+                physical_volumes.append(physical_volumes_info)
+            else:
+                physical_volumes[volume_a] = [physical_volumes_info]
+
+        # self.pv = g4.G4PhysicalVolumeStore.GetInstance()
+        # self.pv1 = self.pv.GetVolume(g4.G4String('crystal'))
+        # print(f"The physical volume is {self.pv1}")
+
+    return physical_volumes
+
 
 class PhysicsEngine(EngineBase):
     """
@@ -318,6 +346,7 @@ class PhysicsEngine(EngineBase):
         self.g4_em_parameters = None
         self.g4_parallel_world_physics = []
         self.g4_optical_material_tables = {}
+        self.g4_physical_volumes = {}
 
         # physics constructors implement on the Gate/python side
         self.gate_physics_constructors = []
@@ -340,6 +369,7 @@ class PhysicsEngine(EngineBase):
         self.g4_em_parameters = None
         self.g4_parallel_world_physics = []
         self.g4_optical_material_tables = {}
+        self.g4_physical_volumes = {}
 
     @requires_fatal("simulation_engine")
     @requires_warning("g4_physics_list")
@@ -383,6 +413,7 @@ class PhysicsEngine(EngineBase):
         self.initialize_global_cuts()
         self.initialize_regions()
         self.initialize_optical_material_properties()
+        self.initialize_surface_material_properties()
 
     def initialize_parallel_world_physics(self):
         for (
@@ -505,6 +536,13 @@ class PhysicsEngine(EngineBase):
                         f"Could not load the optical material properties for material {material_name} "
                         f"found in volume {vol.name} from file {self.physics_manager.optical_properties_file}."
                     )
+    
+    def initialize_surface_material_properties(self):
+        volume_surfaces_info = self.simulation_engine.simulation.physics_manager.volume_surfaces_info
+        self.g4_physical_volumes = get_g4_physical_volumes(volume_surfaces_info)
+
+        print("Inside Physics Engine - ")
+        print(self.g4_physical_volumes)
 
     @requires_fatal("physics_manager")
     def initialize_user_limits_physics(self):
@@ -1377,6 +1415,11 @@ class SimulationEngine(EngineBase):
         if not g4.GateInfo.get_G4MULTITHREADED():
             fatal("DEBUG Register sensitive detector in no MT mode")
             # todo : self.actor_engine.register_sensitive_detectors()
+        
+
+        # self.pv = g4.G4PhysicalVolumeStore.GetInstance()
+        # self.pv1 = self.pv.GetVolume(g4.G4String('crystal'))
+        # print(f"The physical volume is {self.pv1}")
 
     def create_run_manager(self):
         """Get the correct RunManager according to the requested threads
