@@ -435,7 +435,14 @@ class PhysicsManager(GateObject):
             "is_input_file": True,
         },
     )
-
+    user_info_defaults["surface_properties_file"] = (
+        Path(os.path.dirname(__file__)) / "data" / "SurfaceProperties.xml",
+        {
+            "doc": "Path to the xml file containing the surface properties to be used for creating surfaces. "
+            "Default: file shipped with Gate.",
+            "is_input_file": True,
+        },
+    )
     user_info_defaults["user_limits_particles"] = (
         Box(
             [
@@ -505,6 +512,10 @@ class PhysicsManager(GateObject):
         # NB: It is well-defined because each volume has only one region.
         self.volumes_regions_lut = {}
 
+        # dictionary containing all the volume's surfaces
+        # key=volume_name, value={surface_name, finish_name}
+        self.volume_surfaces_info = {}
+
     def reset(self):
         self.__init__(self.simulation)
 
@@ -565,6 +576,52 @@ class PhysicsManager(GateObject):
         else:
             s += "*** No cuts per region defined. ***\n"
         return s
+    
+    def add_surface(self, surface_name, volume_a, volume_b, surface_finish):
+        """
+        Adds a surface between volume_a and volume_b with specified finish.
+
+        Parameters:
+        surface_name : Name of the surface to be added.
+        volume_a : The volume from.
+        volume_b : The volume to.
+        finish_name : The name of the finish to be applied to the surface.
+
+        Returns:
+        None
+        """
+
+        surface_info = {
+            "surface_name": surface_name, 
+            "volumes": [volume_a, volume_b],
+            "surface_finish": surface_finish
+        }
+        
+        volume_list = self.simulation.volume_manager.volumes
+
+        if volume_a in volume_list and volume_b in volume_list:
+            if volume_a in self.volume_surfaces_info:
+                self.volume_surfaces_info[volume_a].append(surface_info)
+            else:
+                self.volume_surfaces_info[volume_a] = [surface_info]
+        else:
+            # If either volume_a or volume_b is not present, raise a fatal error
+            missing_volumes = [vol for vol in [volume_a, volume_b] if vol not in volume_list]
+            fatal(f"Volume(s) {', '.join(missing_volumes)} not present in created volumes")
+
+    def dump_surface_information(self):
+        """
+        Prints each volume's name and its associated surfaces' details (surface name, connected volumes, 
+        and surface finish) from the `volume_surfaces` dictionary in a readable format.
+        """
+
+        for key, surfaces in self.volume_surfaces_info.items():
+            print(f"Volume: {key}")
+            for surface in surfaces:
+                print(f"  Surface Name: {surface['surface_name']}")
+                print(f"    Connected Volumes: {', '.join(surface['volumes'])}")
+                print(f"    Surface Finish: {surface['surface_finish']}\n")
+
 
     @property
     def enable_decay(self):
@@ -1262,6 +1319,9 @@ class Simulation(GateObject):
     def add_volume(self, volume, name=None):
         return self.volume_manager.add_volume(volume, name)
 
+    def add_surface(self, surface_name, volume_a, volume_b, finish_name):
+        return self.physics_manager.add_surface(surface_name, volume_a, volume_b, finish_name)
+    
     def add_parallel_world(self, name):
         self.volume_manager.add_parallel_world(name)
 
