@@ -241,6 +241,63 @@ def load_optical_properties_from_xml(optical_properties_file, material_name):
 
     return material_properties
 
+def load_surface_properties_from_xml(surface_properties_file, surface_name):
+    try:
+        xml_tree = ET.parse(surface_properties_file)
+    except FileNotFoundError:
+        fatal(f"Could not find the surface_optical_properties_file {surface_properties_file}.")
+    xml_root = xml_tree.getroot()
+
+    xml_entry_material = None
+    for m in xml_root.findall("surface"):
+        if m.get("name") == surface_name:
+            xml_entry_material = m
+            break
+    if xml_entry_material is None:
+        warning(
+            f"Could not find any surface properties for surface {surface_name}"
+            f"in file {surface_properties_file}."
+        )
+        return 
+    
+    surface_properties = {"constant_properties": {}, "vector_properties": {}}
+
+    #Handle constant properties
+    surface_properties["constant_properties"] = {
+        "surface_model" : xml_entry_material.get("model"),
+        "surface_finish" : xml_entry_material.get("finish"),
+        "surface_type " : xml_entry_material.get("name"),
+        "surface_sigma_alpha" : xml_entry_material.get("sigmaalpha"),
+    }
+
+    #Handle propertyvector elements for UNIFIED Model
+    for ptable in xml_entry_material.findall("propertiestable"):
+        for prop_vector in ptable.findall("propertyvector"):
+            prop_vector_name = prop_vector.get("name")
+            prop_vector_energy_unit = prop_vector.get("energyunit")
+
+            if prop_vector_energy_unit is not None:
+                energy_unit = g4_units[prop_vector_energy_unit]
+            else:
+                energy_unit = 1.0
+            
+            # Handle ve elements inside propertyvector
+            ve_energy_list = []
+            ve_value_list = []
+            for ve in prop_vector.findall("ve"):
+                ve_energy_list.append(float(ve.get("energy")) * energy_unit)
+
+                # Ask Dr. Carlotta about the value_unit used here 
+                # ve_value_list.append(float(ve.get("value")) * value_unit)
+
+            #Add Value list after clearing doubt
+            surface_properties["vector_properties"][prop_vector_name] = {
+                "prop_vector_energy_unit": prop_vector_energy_unit,
+                "ve_energy_list": ve_energy_list,
+            }
+
+    return surface_properties
+
 
 def create_g4_optical_properties_table(material_properties_dictionary):
     """Creates and fills a G4MaterialPropertiesTable with values from a dictionary created by a parsing function,
@@ -288,7 +345,9 @@ def create_g4_optical_properties_table(material_properties_dictionary):
 
     return g4_material_table
 
-def get_g4_physical_volumes(volume_surfaces_info):
+#Change volume_a, and b to 1 and 2 
+
+def get_g4_physical_volumes(volume_surfaces_info, surface_properties_file):
 
     physical_volumes = {}
 
@@ -305,6 +364,10 @@ def get_g4_physical_volumes(volume_surfaces_info):
                 "physical_volumes": [physical_volume_a, physical_volume_b]
             }
 
+            surface_properties = load_surface_properties_from_xml(surface_properties_file, surface["surface_finish"])
+
+            print(f"The surface properties are {surface_properties}")
+
             if volume_a in physical_volumes:
                 physical_volumes.append(physical_volumes_info)
             else:
@@ -315,6 +378,13 @@ def get_g4_physical_volumes(volume_surfaces_info):
         # print(f"The physical volume is {self.pv1}")
 
     return physical_volumes
+
+# def get_g4_surfaces(volume_surfaces_info):
+
+#     surfaces = {}
+
+#     for key, surfaces in volume_surfaces_info.items():
+#         for surface in surfaces: 
 
 
 class PhysicsEngine(EngineBase):
@@ -530,7 +600,10 @@ class PhysicsEngine(EngineBase):
     
     def initialize_surface_material_properties(self):
         volume_surfaces_info = self.simulation_engine.simulation.physics_manager.volume_surfaces_info
-        self.g4_physical_volumes = get_g4_physical_volumes(volume_surfaces_info)
+
+        self.g4_physical_volumes = get_g4_physical_volumes(volume_surfaces_info, self.physics_manager.surface_properties_file)
+
+        # surface_properties = load_surface_properties_from_xml(self.physics_manager.surface_properties_file, )
 
         print("Inside Physics Engine - ")
         print(self.g4_physical_volumes)
