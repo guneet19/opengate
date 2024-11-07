@@ -544,7 +544,7 @@ Refer to this [testcase](https://github.com/OpenGATE/opengate/blob/6cd98d3f7d761
 
 In the default optical simulations of Gate v10, each optical photon generated is treated as a separate track, which can be quite resource-intensive. For instance, approximately one second is required to simulate the spatial distribution of optical photons detected from a single 511 keV gamma ray interaction in a 20 mm thick layer of bismuth germanate (BGO), which has a light yield of about 8500 photons per MeV. Recent advancements in Monte Carlo simulations using deep learning, particularly with Generative Adversarial Networks (GANs), have shown significant potential in reducing simulation times. We have adopted a specific type of GAN known as Wasserstein GAN to enhance the efficiency of generating optical photons in scintillation crystals, which we have named OptiGAN. For more detailed information, you can refer to this [research paper](https://iopscience.iop.org/article/10.1088/2632-2153/acc782). 
 
-OptiGAN model trained for 3 × 3 × 3 mm3 BGO crystal is already included with Gate 10. More models will be added in the future.
+OptiGAN model trained for 3 × 3 × 3 mm^3 BGO crystal is already included with Gate 10. More models will be added in the future.
 
 Users can utilize OptiGAN in two ways: they can integrate it into the simulation file, or they can use it after running the simulation. 
 
@@ -564,13 +564,13 @@ Method 1 can be used when a user wants to run OptiGAN within the same simulation
 
 Method 2 can be used when a user wants to use OptiGAN in a file outside their main simulation file. In this case, the `root_file_path` must be set to the path of the root file obtained from the simulation. 
 
-### Working of OptiGAN Module in Gate 10
+### Workflow of OptiGAN Module in Gate 10
 
 ![](../figures/optigan_working.png)
 
-OptiGAN requires two pieces of input information: the position of electron emission and the number of optical photons emitted. This information is automatically parsed from the root files when users utilize OptiGAN.
+OptiGAN requires two pieces of input information: the position of gamma interaction interaction in the crystal and the number of optical photons emitted. This information is automatically parsed from the root files when users utilize OptiGAN.
 
-- Position of electron emission: This refers to the coordinate information of electrons that generate optical photons in a standard simulation.
+- Position of gamma interaction: This refers to the coordinate information of electrons that generate optical photons in a standard simulation.
 
 - Number of optical photons emitted: This indicates the total number of optical photons emitted per gamma event.
 
