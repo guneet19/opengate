@@ -568,9 +568,9 @@ Method 2 can be used when a user wants to use OptiGAN in a file outside their ma
 
 ![](../figures/optigan_working.png)
 
-OptiGAN requires two pieces of input information: the position of gamma interaction interaction in the crystal and the number of optical photons emitted. This information is automatically parsed from the root files when users utilize OptiGAN.
+OptiGAN requires two pieces of input information: the position of gamma interaction in the crystal and the number of optical photons emitted. This information is automatically parsed from the root files when users utilize OptiGAN.
 
-- Position of gamma interaction: This refers to the coordinate information of electrons that generate optical photons in a standard simulation.
+- Position of gamma interaction: This refers to the coordinate information of gamma interaction with the scintillation crystal.
 
 - Number of optical photons emitted: This indicates the total number of optical photons emitted per gamma event.
 
