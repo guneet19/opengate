@@ -175,15 +175,11 @@ Obtaining the number of optical photons emitted without modifying Geant4 is chal
     ka.attached_to = crystal
     ka.filters.append(fe)
 
-NOTE
-
-   Using a kill actor still creates optical photons, but it terminates the track after the first step. This approach provides us with the required information (number of optical photons emitted) as an input for OptiGAN, while also saving tracking time by terminating the photons early.
+NOTE: Using a kill actor still creates optical photons, but it terminates the track after the first step. This approach provides us with the required information (number of optical photons emitted) as an input for OptiGAN, while also saving tracking time by terminating the photons early.
 
 .. image:: ../figures/kill_actor.png
 
-NOTE
-
-   The analysis of computation time gained by using OptiGAN in Gate 10 is still in works by the team at UC Davis.
+NOTE: The analysis of computation time gained by using OptiGAN in Gate 10 is still in works by the team at UC Davis.
 
 WARNING: this part is work in progress. DO NOT USE YET.
 
