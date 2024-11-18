@@ -12,6 +12,7 @@ First, the user needs to select a physics list. A physics list contains a large 
 
     # Assume that sim is a simulation
     sim.physics_manager.physics_list_name = 'QGSP_BERT_EMZ'
+cxcxc
 
 The default physics list is QGSP_BERT_EMV. The Geant4 standard physics lists are composed of a first part:
 
